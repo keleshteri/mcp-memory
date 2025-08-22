@@ -1,3 +1,36 @@
+/**
+ * @ai-metadata
+ * @class: MetadataParser
+ * @description: Parses and validates AI metadata headers from source files, extracting structured metadata for the rule engine and approval system
+ * @last-update: 2024-12-20
+ * @last-editor: ai-assistant
+ * @changelog: ./CHANGELOG.md
+ * @stability: stable
+ * @edit-permissions: method-specific
+ * @method-permissions: { "constructor": "read-only", "parseFileMetadata": "read-only", "extractMetadataFromContent": "read-only", "updateFileMetadata": "allow", "updateMetadataInContent": "allow", "generateMetadataBlock": "allow" }
+ * @dependencies: ["fs-extra", "path", "glob", "chalk", "./types.js"]
+ * @tests: ["./tests/metadata-parser.test.js"]
+ * @breaking-changes-risk: medium
+ * @review-required: true
+ * @ai-context: "This parses AI metadata headers that control file modification permissions. Changes here affect the entire safety system for AI assistants. Handle with care."
+ *
+ * @approvals:
+ *   - dev-approved: false
+ *   - dev-approved-by: ""
+ *   - dev-approved-date: ""
+ *   - code-review-approved: false
+ *   - code-review-approved-by: ""
+ *   - code-review-date: ""
+ *   - qa-approved: false
+ *   - qa-approved-by: ""
+ *   - qa-approved-date: ""
+ *
+ * @approval-rules:
+ *   - require-dev-approval-for: ["breaking-changes", "security-related", "parsing-logic"]
+ *   - require-code-review-for: ["all-changes"]
+ *   - require-qa-approval-for: ["production-ready"]
+ */
+
 import fs from 'fs-extra';
 import * as path from 'path';
 import { glob } from 'glob';

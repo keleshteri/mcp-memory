@@ -1,3 +1,36 @@
+/**
+ * @ai-metadata
+ * @class: ChangelogManager
+ * @description: Manages automatic changelog generation and tracking for AI coding sessions, handling both JSON and Markdown changelog formats
+ * @last-update: 2024-12-20
+ * @last-editor: ai-assistant
+ * @changelog: ./CHANGELOG.md
+ * @stability: stable
+ * @edit-permissions: method-specific
+ * @method-permissions: { "constructor": "read-only", "addChangelogEntry": "allow", "getChangelog": "read-only", "getChangelogForFile": "read-only", "getRecentChanges": "read-only", "updateMarkdownChangelog": "read-only", "addQuickEntry": "allow" }
+ * @dependencies: ["fs-extra", "path", "chalk", "./types.js"]
+ * @tests: ["./tests/changelog-manager.test.js"]
+ * @breaking-changes-risk: medium
+ * @review-required: false
+ * @ai-context: "This manages changelog generation and tracking. Changes here affect how project history is recorded and displayed. Generally safe to modify with proper testing."
+ *
+ * @approvals:
+ *   - dev-approved: false
+ *   - dev-approved-by: ""
+ *   - dev-approved-date: ""
+ *   - code-review-approved: false
+ *   - code-review-approved-by: ""
+ *   - code-review-date: ""
+ *   - qa-approved: false
+ *   - qa-approved-by: ""
+ *   - qa-approved-date: ""
+ *
+ * @approval-rules:
+ *   - require-dev-approval-for: ["breaking-changes"]
+ *   - require-code-review-for: ["major-changes"]
+ *   - require-qa-approval-for: ["production-ready"]
+ */
+
 import fs from 'fs-extra';
 import * as path from 'path';
 import chalk from 'chalk';

@@ -1,3 +1,36 @@
+/**
+ * @ai-metadata
+ * @class: MCPMemoryServer
+ * @description: Main MCP server implementation that provides AI coding assistants with memory management, file approval tracking, and changelog functionality
+ * @last-update: 2024-12-20
+ * @last-editor: ai-assistant
+ * @changelog: ./CHANGELOG.md
+ * @stability: stable
+ * @edit-permissions: method-specific
+ * @method-permissions: { "constructor": "read-only", "detectProjectRoot": "read-only", "initializeProject": "add-only", "setupHandlers": "read-only", "run": "read-only" }
+ * @dependencies: ["@modelcontextprotocol/sdk", "./memory-manager.js", "./changelog-manager.js", "./metadata-parser.js", "./rule-engine.js", "chalk", "fs-extra", "path"]
+ * @tests: ["./tests/index.test.js"]
+ * @breaking-changes-risk: high
+ * @review-required: true
+ * @ai-context: "This is the core MCP server implementation. Changes here affect all MCP protocol interactions and tool availability. Handle with extreme care."
+ *
+ * @approvals:
+ *   - dev-approved: false
+ *   - dev-approved-by: ""
+ *   - dev-approved-date: ""
+ *   - code-review-approved: false
+ *   - code-review-approved-by: ""
+ *   - code-review-date: ""
+ *   - qa-approved: false
+ *   - qa-approved-by: ""
+ *   - qa-approved-date: ""
+ *
+ * @approval-rules:
+ *   - require-dev-approval-for: ["breaking-changes", "security-related", "protocol-changes"]
+ *   - require-code-review-for: ["all-changes"]
+ *   - require-qa-approval-for: ["production-ready"]
+ */
+
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {

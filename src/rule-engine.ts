@@ -1,3 +1,36 @@
+/**
+ * @ai-metadata
+ * @class: RuleEngine
+ * @description: File modification rules engine that enforces AI safety protocols, permission checks, and approval workflows for secure AI assistant operations
+ * @last-update: 2024-12-20
+ * @last-editor: ai-assistant
+ * @changelog: ./CHANGELOG.md
+ * @stability: stable
+ * @edit-permissions: method-specific
+ * @method-permissions: { "constructor": "read-only", "checkBeforeModification": "read-only", "getActionsAfterModification": "read-only", "evaluateRule": "read-only", "evaluateCondition": "read-only", "getDefaultRules": "read-only", "addCustomRule": "allow", "removeRule": "allow", "enableRule": "allow", "disableRule": "allow", "listRules": "read-only" }
+ * @dependencies: ["chalk", "./types.js"]
+ * @tests: ["./tests/rule-engine.test.js"]
+ * @breaking-changes-risk: high
+ * @review-required: true
+ * @ai-context: "This is the core safety system that enforces file modification rules and permissions for AI assistants. Changes here directly affect AI safety protocols. Extreme caution required."
+ *
+ * @approvals:
+ *   - dev-approved: false
+ *   - dev-approved-by: ""
+ *   - dev-approved-date: ""
+ *   - code-review-approved: false
+ *   - code-review-approved-by: ""
+ *   - code-review-date: ""
+ *   - qa-approved: false
+ *   - qa-approved-by: ""
+ *   - qa-approved-date: ""
+ *
+ * @approval-rules:
+ *   - require-dev-approval-for: ["breaking-changes", "security-related", "rule-modifications", "safety-protocols"]
+ *   - require-code-review-for: ["all-changes"]
+ *   - require-qa-approval-for: ["production-ready"]
+ */
+
 import chalk from 'chalk';
 import { AIMetadata, ApprovalStatus, AIRule } from './types.js';
 

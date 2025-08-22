@@ -1,3 +1,36 @@
+/**
+ * @ai-metadata
+ * @class: TypeDefinitions
+ * @description: Core TypeScript interfaces and type definitions for AI metadata, project memory, approvals, and system components
+ * @last-update: 2024-12-20
+ * @last-editor: ai-assistant
+ * @changelog: ./CHANGELOG.md
+ * @stability: stable
+ * @edit-permissions: add-only
+ * @method-permissions: {}
+ * @dependencies: []
+ * @tests: ["./tests/types.test.js"]
+ * @breaking-changes-risk: high
+ * @review-required: true
+ * @ai-context: "This file defines all core data structures and interfaces. Changes here affect the entire system architecture. Only add new interfaces, never modify existing ones without extreme caution."
+ *
+ * @approvals:
+ *   - dev-approved: false
+ *   - dev-approved-by: ""
+ *   - dev-approved-date: ""
+ *   - code-review-approved: false
+ *   - code-review-approved-by: ""
+ *   - code-review-date: ""
+ *   - qa-approved: false
+ *   - qa-approved-by: ""
+ *   - qa-approved-date: ""
+ *
+ * @approval-rules:
+ *   - require-dev-approval-for: ["breaking-changes", "interface-modifications", "type-changes"]
+ *   - require-code-review-for: ["all-changes"]
+ *   - require-qa-approval-for: ["production-ready"]
+ */
+
 export interface AIMetadata {
   class?: string;
   description?: string;

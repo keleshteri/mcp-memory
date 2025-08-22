@@ -1,3 +1,36 @@
+/**
+ * @ai-metadata
+ * @class: MemoryManager
+ * @description: Core memory and session management system for AI coding assistants, handling project memory, file approvals, and session tracking
+ * @last-update: 2024-12-20
+ * @last-editor: ai-assistant
+ * @changelog: ./CHANGELOG.md
+ * @stability: stable
+ * @edit-permissions: method-specific
+ * @method-permissions: { "constructor": "read-only", "getProjectMemory": "read-only", "saveProjectMemory": "allow", "startNewSession": "allow", "addSessionStep": "allow", "addImportantDecision": "allow", "setFileApproval": "allow", "getFileApprovalStatus": "read-only", "invalidateFileApprovals": "allow" }
+ * @dependencies: ["fs-extra", "path", "glob", "chalk", "./types.js"]
+ * @tests: ["./tests/memory-manager.test.js"]
+ * @breaking-changes-risk: high
+ * @review-required: true
+ * @ai-context: "This is the core memory management system. Changes here affect all project memory, session tracking, and file approval workflows. Critical for AI assistant safety."
+ *
+ * @approvals:
+ *   - dev-approved: false
+ *   - dev-approved-by: ""
+ *   - dev-approved-date: ""
+ *   - code-review-approved: false
+ *   - code-review-approved-by: ""
+ *   - code-review-date: ""
+ *   - qa-approved: false
+ *   - qa-approved-by: ""
+ *   - qa-approved-date: ""
+ *
+ * @approval-rules:
+ *   - require-dev-approval-for: ["breaking-changes", "security-related", "approval-workflow"]
+ *   - require-code-review-for: ["all-changes"]
+ *   - require-qa-approval-for: ["production-ready"]
+ */
+
 import fs from 'fs-extra';
 import * as path from 'path';
 import { glob } from 'glob';
