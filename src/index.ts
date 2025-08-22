@@ -11,6 +11,8 @@ import { ChangelogManager } from './changelog-manager.js';
 import { MetadataParser } from './metadata-parser.js';
 import { RuleEngine } from './rule-engine.js';
 import chalk from 'chalk';
+import fs from 'fs-extra';
+import * as path from 'path';
 
 class MCPMemoryServer {
   private server: Server;
@@ -21,7 +23,7 @@ class MCPMemoryServer {
   private projectRoot: string;
 
   constructor() {
-    this.projectRoot = process.env.PROJECT_ROOT || process.cwd();
+    this.projectRoot = this.detectProjectRoot();
     this.server = new Server({
       name: 'mcp-memory-server',
       version: '1.0.0',
@@ -38,6 +40,106 @@ class MCPMemoryServer {
     this.ruleEngine = new RuleEngine();
 
     this.setupHandlers();
+    this.initializeProject();
+  }
+
+  /**
+   * Detects the project root by looking for common project indicators
+   * Traverses up the directory tree from the current working directory
+   */
+  private detectProjectRoot(): string {
+    const projectIndicators = [
+      'package.json',
+      '.git',
+      'pyproject.toml',
+      'Cargo.toml',
+      'go.mod',
+      'pom.xml',
+      'build.gradle',
+      'composer.json',
+      '.project',
+      'Makefile',
+      'CMakeLists.txt'
+    ];
+
+    let currentDir = process.cwd();
+    const rootDir = path.parse(currentDir).root;
+
+    while (currentDir !== rootDir) {
+      // Check if any project indicators exist in current directory
+      for (const indicator of projectIndicators) {
+        const indicatorPath = path.join(currentDir, indicator);
+        if (fs.existsSync(indicatorPath)) {
+          console.log(chalk.green(`🎯 Detected project root: ${currentDir}`));
+          console.log(chalk.blue(`📁 Found indicator: ${indicator}`));
+          return currentDir;
+        }
+      }
+      
+      // Move up one directory
+      currentDir = path.dirname(currentDir);
+    }
+
+    // If no project indicators found, use current working directory
+    const fallbackDir = process.cwd();
+    console.log(chalk.yellow(`⚠️  No project indicators found, using current directory: ${fallbackDir}`));
+    return fallbackDir;
+  }
+
+  /**
+   * Initializes the project by ensuring .ai-memory folder exists
+   */
+  private async initializeProject(): Promise<void> {
+    try {
+      const memoryDir = path.join(this.projectRoot, '.ai-memory');
+      
+      if (!await fs.pathExists(memoryDir)) {
+        await fs.ensureDir(memoryDir);
+        console.log(chalk.green(`✨ Initialized .ai-memory folder at: ${memoryDir}`));
+        
+        // Create initial project memory if it doesn't exist
+        const projectMemoryPath = path.join(memoryDir, 'project-memory.json');
+        if (!await fs.pathExists(projectMemoryPath)) {
+          const initialMemory = {
+            projectContext: {
+              name: path.basename(this.projectRoot),
+              architecture: 'unknown',
+              techStack: [],
+              codingStandards: './docs/coding-standards.md',
+              mainBranch: 'main'
+            },
+            currentSession: {
+              sessionId: this.generateSessionId(),
+              task: 'Project initialized',
+              started: new Date().toISOString(),
+              completedSteps: [],
+              nextSteps: [],
+              importantDecisions: {},
+              blockers: []
+            },
+            fileHistory: {},
+            globalDecisions: [],
+            approvalStates: {}
+          };
+          
+          await fs.writeJson(projectMemoryPath, initialMemory, { spaces: 2 });
+          console.log(chalk.green(`📝 Created initial project memory`));
+        }
+      } else {
+        console.log(chalk.blue(`📁 Using existing .ai-memory folder at: ${memoryDir}`));
+      }
+      
+      console.log(chalk.green(`🚀 MCP Memory Server ready for project: ${path.basename(this.projectRoot)}`));
+    } catch (error) {
+      console.error(chalk.red('❌ Error initializing project:'), error);
+    }
+  }
+
+  /**
+   * Generates a unique session ID
+   */
+  private generateSessionId(): string {
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   private setupHandlers(): void {

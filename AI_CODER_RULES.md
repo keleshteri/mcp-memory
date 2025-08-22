@@ -310,7 +310,7 @@ AI Coder Rules:
 5. Respect breaking-changes-risk levels
 
 MCP Server: mcp-memory-server
-Project Root: ${PROJECT_ROOT}
+Project Root: Auto-detected
 */
 ```
 
@@ -376,7 +376,7 @@ update_file_metadata(filePath, updates)
 
 1. **MCP Server Not Responding**
    - Check if server is running: `npm start`
-   - Verify PROJECT_ROOT environment variable
+   - Verify server detected correct project root (check console output)
    - Check network connectivity
 
 2. **Permission Denied Errors**

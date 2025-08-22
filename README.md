@@ -41,17 +41,26 @@ npm start
 
 ## 🔧 Setup & Configuration
 
-### 1. Set Your Project Path
+### 1. Automatic Project Detection
+
+The MCP Memory Server automatically detects your project root by looking for common project indicators like:
+- `package.json` (Node.js/npm projects)
+- `.git` (Git repositories)
+- `pyproject.toml` (Python projects)
+- `Cargo.toml` (Rust projects)
+- `go.mod` (Go projects)
+- `pom.xml` (Maven projects)
+- And many more...
+
+Simply run the server from anywhere within your project directory:
 
 **Windows:**
 ```cmd
-set PROJECT_ROOT=C:\path\to\your\project
 npm start
 ```
 
 **Linux/Mac:**
 ```bash
-export PROJECT_ROOT=/path/to/your/project
 npm start
 ```
 
@@ -65,14 +74,13 @@ Add this to your AI assistant's configuration:
   "mcpServers": {
     "mcp-memory": {
       "command": "node",
-      "args": ["path/to/mcp-memory/dist/index.js"],
-      "env": {
-        "PROJECT_ROOT": "/path/to/your/project"
-      }
+      "args": ["D:\\Development\\Projects\\AI\\MCP\\mcp-memory\\dist\\index.js"]
     }
   }
 }
 ```
+
+**Note:** The server will automatically detect and initialize your project when you start using it. No environment variables needed!
 
 **For Cursor IDE:**
 Add to `.cursorrules`:
@@ -282,7 +290,7 @@ mcp-memory/
 ✅ **What manual install misses:**
 - No example files to learn from
 - No sample metadata headers
-- No guidance on PROJECT_ROOT setup
+- No automatic project setup
 - No example project structure
 
 **Recommendation**: Always use the install scripts for the best experience!
@@ -294,9 +302,9 @@ mcp-memory/
 # Check if TypeScript compiled
 npm run build
 
-# Check if PROJECT_ROOT is set
-echo $PROJECT_ROOT  # Linux/Mac
-echo %PROJECT_ROOT% # Windows
+# Make sure you're in a valid project directory
+pwd  # Check current directory
+ls   # Look for project indicators (package.json, .git, etc.)
 
 # Start with debug info
 DEBUG=* npm start
@@ -305,7 +313,7 @@ DEBUG=* npm start
 ### **AI Assistant Can't Connect**
 1. Make sure server is running (`npm start`)
 2. Check MCP configuration in your AI assistant
-3. Verify PROJECT_ROOT points to your actual project
+3. Verify the server detected the correct project root (check console output)
 4. Check firewall/antivirus isn't blocking the connection
 
 ### **Permission Errors**
@@ -319,10 +327,11 @@ parser.parseFileMetadata('your-file.js').then(console.log);
 ```
 
 ### **Memory Files Not Created**
-The server creates a `.ai-memory/` folder in your PROJECT_ROOT. If it's missing:
-1. Check PROJECT_ROOT is writable
+The server creates a `.ai-memory/` folder in your detected project root. If it's missing:
+1. Check the detected project directory is writable
 2. Check disk space
 3. Run with elevated permissions if needed
+4. Verify the server detected the correct project root from console output
 
 ## 🎯 Next Steps
 

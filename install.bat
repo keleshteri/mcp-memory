@@ -40,8 +40,8 @@ echo }>> example-project\src\UserService.js
 echo ✅ MCP Memory Server installation complete!
 echo.
 echo 📋 Next steps:
-echo 1. Set PROJECT_ROOT environment variable:
-echo    set PROJECT_ROOT=C:\path\to\your\project
+echo 1. Navigate to your project directory and run the MCP server:
+echo    The server will automatically detect your project root
 echo.
 echo 2. Start the MCP server:
 echo    npm start
