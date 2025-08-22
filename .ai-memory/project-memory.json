@@ -1,0 +1,43 @@
+{
+  "projectContext": {
+    "name": "mcp-memory",
+    "architecture": "MCP Server with TypeScript",
+    "techStack": [
+      "TypeScript",
+      "Node.js",
+      "MCP SDK",
+      "fs-extra",
+      "chalk"
+    ],
+    "codingStandards": "./docs/coding-standards.md",
+    "mainBranch": "main"
+  },
+  "currentSession": {
+    "sessionId": "session-1755828321484-xa15xkmrn",
+    "task": "Initialize AI memory MCP system and set up project configuration",
+    "started": "2025-08-22T02:06:00.000Z",
+    "completedSteps": [
+      "Created .ai-memory directory",
+      "Initialized project memory structure"
+    ],
+    "nextSteps": [
+      "Test MCP server functionality",
+      "Verify all components are working"
+    ],
+    "importantDecisions": {
+      "memoryLocation": ".ai-memory directory in project root",
+      "sessionManagement": "Automatic session ID generation"
+    },
+    "blockers": []
+  },
+  "fileHistory": {},
+  "globalDecisions": [
+    {
+      "key": "projectStructure",
+      "value": "Modular architecture with separate managers for memory, changelog, metadata, and rules",
+      "reasoning": "Separation of concerns for better maintainability and extensibility",
+      "timestamp": "2025-08-22T02:06:00.000Z"
+    }
+  ],
+  "approvalStates": {}
+}
