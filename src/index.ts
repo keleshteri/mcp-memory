@@ -356,7 +356,9 @@ class MCPMemoryServer {
 }
 
 // Start the server
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Check if this file is being run directly
+const isMainModule = process.argv[1] && process.argv[1].endsWith('index.js');
+if (isMainModule) {
   const server = new MCPMemoryServer();
   server.run().catch((error) => {
     console.error(chalk.red('Failed to start server:'), error);
