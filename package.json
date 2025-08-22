@@ -1,0 +1,28 @@
+{
+  "name": "mcp-memory-server",
+  "version": "1.0.0",
+  "description": "MCP server for AI coder memory, approvals, and changelog management",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "watch": "tsx watch src/index.ts"
+  },
+  "keywords": ["mcp", "memory", "ai", "coder", "changelog"],
+  "author": "AI Coder Memory System",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "fs-extra": "^11.1.1",
+    "glob": "^10.3.10",
+    "chalk": "^4.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/fs-extra": "^11.0.0",
+    "typescript": "^5.0.0",
+    "tsx": "^4.0.0"
+  }
+}
