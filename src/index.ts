@@ -43,6 +43,7 @@ import { MemoryManager } from './memory-manager.js';
 import { ChangelogManager } from './changelog-manager.js';
 import { MetadataParser } from './metadata-parser.js';
 import { RuleEngine } from './rule-engine.js';
+import { FolderMapper } from './folder-mapper.js';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
@@ -53,6 +54,7 @@ class MCPMemoryServer {
   private changelogManager: ChangelogManager;
   private metadataParser: MetadataParser;
   private ruleEngine: RuleEngine;
+  private folderMapper: FolderMapper;
   private projectRoot: string;
 
   constructor() {
@@ -71,6 +73,7 @@ class MCPMemoryServer {
     this.changelogManager = new ChangelogManager(this.projectRoot);
     this.metadataParser = new MetadataParser(this.projectRoot);
     this.ruleEngine = new RuleEngine();
+    this.folderMapper = new FolderMapper(this.projectRoot);
 
     this.setupHandlers();
     this.initializeProject();
@@ -346,6 +349,27 @@ class MCPMemoryServer {
               days: { type: 'number', description: 'Number of days to look back (default: 7)' }
             }
           }
+        },
+        
+        // Folder Mapping Tools  
+        {
+          name: 'generate_folder_map',
+          description: 'Generate or update a _map.md file for a specific folder',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              folderPath: { type: 'string', description: 'Path to the folder to generate map for' }
+            },
+            required: ['folderPath']
+          }
+        },
+        {
+          name: 'generate_all_folder_maps', 
+          description: 'Generate _map.md files for all folders in the project',
+          inputSchema: {
+            type: 'object',
+            properties: {}
+          }
         }
       ]
     }));
@@ -470,6 +494,18 @@ class MCPMemoryServer {
             const days = (args.days as number) || 7;
             const recentChanges = await this.changelogManager.getRecentChanges(days);
             return { content: [{ type: 'text', text: JSON.stringify(recentChanges, null, 2) }] };
+          }
+
+          // Folder Mapping Tools
+          case 'generate_folder_map': {
+            const folderPath = args.folderPath as string;
+            const folderMap = await this.folderMapper.generateFolderMap(folderPath);
+            return { content: [{ type: 'text', text: `Folder map generated successfully for: ${folderPath}` }] };
+          }
+
+          case 'generate_all_folder_maps': {
+            await this.folderMapper.generateAllFolderMaps();
+            return { content: [{ type: 'text', text: 'All folder maps generated successfully' }] };
           }
 
           default:

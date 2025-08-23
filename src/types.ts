@@ -143,3 +143,66 @@ export interface RuleEngine {
   approvalWorkflowRules: AIRule[];
   changelogRules: AIRule[];
 }
+
+// Folder Mapping Types
+export interface FolderMapEntry {
+  folderPath: string;
+  folderName: string;
+  purpose: string;
+  files: FileMapInfo[];
+  dependencies: string[];
+  tests: string[];
+  lastGenerated: string;
+  totalClasses: number;
+  totalInterfaces: number;
+  totalFunctions: number;
+}
+
+export interface FileMapInfo {
+  fileName: string;
+  filePath: string;
+  exports: ExportMapInfo[];
+  imports: ImportMapInfo[];
+  purpose: string;
+  riskLevel: 'low' | 'medium' | 'high';
+}
+
+export interface ExportMapInfo {
+  name: string;
+  type: 'class' | 'interface' | 'function' | 'type' | 'const' | 'enum';
+  methods?: MethodMapInfo[];
+  properties?: PropertyMapInfo[];
+  description?: string;
+  useCases?: string[];
+}
+
+export interface MethodMapInfo {
+  name: string;
+  parameters: string[];
+  returnType?: string;
+  description?: string;
+  useCases?: string[];
+  isStatic?: boolean;
+  isPrivate?: boolean;
+}
+
+export interface PropertyMapInfo {
+  name: string;
+  type?: string;
+  description?: string;
+  isOptional?: boolean;
+}
+
+export interface ImportMapInfo {
+  source: string;
+  imported: string[];
+}
+
+export interface FolderMapConfig {
+  excludePatterns: string[];
+  fileExtensions: string[];
+  autoUpdate: boolean;
+  generateOnBuild: boolean;
+  includePrivateMethods: boolean;
+  includeUseCases: boolean;
+}

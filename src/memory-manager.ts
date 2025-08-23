@@ -63,12 +63,19 @@ export class MemoryManager {
   }
 
   private async ensureMemoryDir(): Promise<void> {
-    await fs.ensureDir(this.memoryDir);
+    try {
+      await fs.ensureDir(this.memoryDir);
+      console.log(chalk.blue(`📁 Memory directory ensured: ${this.memoryDir}`));
+    } catch (error) {
+      console.error(chalk.red('Error ensuring memory directory:'), error);
+      throw error;
+    }
   }
 
   // Project Memory Management
   async getProjectMemory(): Promise<ProjectMemory> {
     try {
+      await this.ensureMemoryDir();
       if (await fs.pathExists(this.projectMemoryPath)) {
         return await fs.readJson(this.projectMemoryPath);
       }
@@ -105,10 +112,12 @@ export class MemoryManager {
 
   async saveProjectMemory(memory: ProjectMemory): Promise<void> {
     try {
+      await this.ensureMemoryDir();
       await fs.writeJson(this.projectMemoryPath, memory, { spaces: 2 });
       console.log(chalk.green('✓ Project memory saved'));
     } catch (error) {
       console.error(chalk.red('Error saving project memory:'), error);
+      throw error;
     }
   }
 
