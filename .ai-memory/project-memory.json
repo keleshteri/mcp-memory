@@ -1,0 +1,27 @@
+{
+  "projectContext": {
+    "name": "mcp-memory",
+    "architecture": "web-application",
+    "techStack": [
+      "Node.js",
+      "TypeScript"
+    ],
+    "codingStandards": "./docs/coding-standards.md",
+    "mainBranch": "main",
+    "created": "2025-08-23T03:15:11.219Z",
+    "lastUpdated": "2025-08-23T03:15:11.219Z"
+  },
+  "currentSession": {
+    "sessionId": "session_1755918911219_7nu17shkt",
+    "task": "Project initialized",
+    "started": "2025-08-23T03:15:11.219Z",
+    "completedSteps": [],
+    "nextSteps": [],
+    "importantDecisions": {},
+    "blockers": []
+  },
+  "fileHistory": {},
+  "globalDecisions": [],
+  "approvalStates": {},
+  "sessions": []
+}

@@ -82,8 +82,16 @@ class MCPMemoryServer {
   /**
    * Detects the project root by looking for common project indicators
    * Traverses up the directory tree from the current working directory
+   * Enhanced with validation and error handling
    */
   private detectProjectRoot(): string {
+    // Check if target project path is provided via environment variable
+    const targetProjectPath = process.env.TARGET_PROJECT_PATH;
+    if (targetProjectPath) {
+      console.log(chalk.blue(`🎯 Using target project path from environment: ${targetProjectPath}`));
+      return this.validateProjectRoot(targetProjectPath);
+    }
+
     const projectIndicators = [
       'package.json',
       '.git',
@@ -95,79 +103,438 @@ class MCPMemoryServer {
       'composer.json',
       '.project',
       'Makefile',
-      'CMakeLists.txt'
+      'CMakeLists.txt',
+      'tsconfig.json',
+      'yarn.lock',
+      'pnpm-lock.yaml',
+      'requirements.txt',
+      'Pipfile',
+      '.gitignore'
     ];
 
     let currentDir = process.cwd();
     const rootDir = path.parse(currentDir).root;
+    const startDir = currentDir;
+    const visitedDirs: string[] = [];
+
+    console.log(chalk.blue(`🔍 Starting project root detection from: ${startDir}`));
+
+    // Validate starting directory
+    try {
+      if (!fs.existsSync(currentDir)) {
+        throw new Error(`Starting directory does not exist: ${currentDir}`);
+      }
+      
+      const stats = fs.statSync(currentDir);
+      if (!stats.isDirectory()) {
+        throw new Error(`Starting path is not a directory: ${currentDir}`);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(chalk.red(`❌ Invalid starting directory: ${errorMessage}`));
+      throw new Error(`Project root detection failed: ${errorMessage}`);
+    }
 
     while (currentDir !== rootDir) {
-      // Check if any project indicators exist in current directory
-      for (const indicator of projectIndicators) {
-        const indicatorPath = path.join(currentDir, indicator);
-        if (fs.existsSync(indicatorPath)) {
-          console.log(chalk.green(`🎯 Detected project root: ${currentDir}`));
-          console.log(chalk.blue(`📁 Found indicator: ${indicator}`));
-          return currentDir;
+      visitedDirs.push(currentDir);
+      
+      try {
+        // Check if directory is accessible
+        fs.accessSync(currentDir, fs.constants.R_OK);
+        
+        // Check if any project indicators exist in current directory
+        for (const indicator of projectIndicators) {
+          const indicatorPath = path.join(currentDir, indicator);
+          
+          try {
+            if (fs.existsSync(indicatorPath)) {
+              // Additional validation for specific indicators
+              if (indicator === 'package.json') {
+                try {
+                  const packageJson = fs.readJsonSync(indicatorPath);
+                  if (!packageJson.name) {
+                    console.log(chalk.yellow(`⚠️  Found package.json without name at: ${currentDir}`));
+                  } else {
+                    console.log(chalk.green(`🎯 Detected project root: ${currentDir}`));
+                    console.log(chalk.blue(`📁 Found indicator: ${indicator} (${packageJson.name})`));
+                    console.log(chalk.gray(`   Searched ${visitedDirs.length} directories`));
+                    return this.validateProjectRoot(currentDir);
+                  }
+                } catch (jsonError) {
+                  console.log(chalk.yellow(`⚠️  Found invalid package.json at: ${currentDir}`));
+                }
+              } else if (indicator === '.git') {
+                const gitConfigPath = path.join(indicatorPath, 'config');
+                if (fs.existsSync(gitConfigPath)) {
+                  console.log(chalk.green(`🎯 Detected project root: ${currentDir}`));
+                  console.log(chalk.blue(`📁 Found indicator: ${indicator} (git repository)`));
+                  console.log(chalk.gray(`   Searched ${visitedDirs.length} directories`));
+                  return this.validateProjectRoot(currentDir);
+                }
+              } else {
+                console.log(chalk.green(`🎯 Detected project root: ${currentDir}`));
+                console.log(chalk.blue(`📁 Found indicator: ${indicator}`));
+                console.log(chalk.gray(`   Searched ${visitedDirs.length} directories`));
+                return this.validateProjectRoot(currentDir);
+              }
+            }
+          } catch (indicatorError) {
+            const indicatorErrorMessage = indicatorError instanceof Error ? indicatorError.message : String(indicatorError);
+            console.log(chalk.gray(`   Skipping ${indicator}: ${indicatorErrorMessage}`));
+          }
         }
+      } catch (accessError) {
+        const accessErrorMessage = accessError instanceof Error ? accessError.message : String(accessError);
+        console.log(chalk.yellow(`⚠️  Cannot access directory: ${currentDir} (${accessErrorMessage})`));
       }
       
       // Move up one directory
-      currentDir = path.dirname(currentDir);
+      const parentDir = path.dirname(currentDir);
+      if (parentDir === currentDir) {
+        // Reached filesystem root
+        break;
+      }
+      currentDir = parentDir;
+      
+      // Prevent infinite loops
+      if (visitedDirs.length > 20) {
+        console.log(chalk.yellow(`⚠️  Stopped after searching 20 directories`));
+        break;
+      }
     }
 
-    // If no project indicators found, use current working directory
+    // If no project indicators found, use current working directory with validation
     const fallbackDir = process.cwd();
-    console.log(chalk.yellow(`⚠️  No project indicators found, using current directory: ${fallbackDir}`));
-    return fallbackDir;
+    console.log(chalk.yellow(`⚠️  No project indicators found after searching ${visitedDirs.length} directories`));
+    console.log(chalk.yellow(`   Using current directory as fallback: ${fallbackDir}`));
+    console.log(chalk.gray(`   Searched path: ${startDir} → ${currentDir}`));
+    
+    return this.validateProjectRoot(fallbackDir);
+  }
+
+  /**
+   * Validates the detected project root and ensures it's usable
+   */
+  private validateProjectRoot(projectRoot: string): string {
+    try {
+      // Ensure the directory exists and is accessible
+      const stats = fs.statSync(projectRoot);
+      if (!stats.isDirectory()) {
+        throw new Error(`Project root is not a directory: ${projectRoot}`);
+      }
+
+      // Check write permissions
+      fs.accessSync(projectRoot, fs.constants.W_OK);
+      
+      // Resolve to absolute path
+      const absolutePath = path.resolve(projectRoot);
+      
+      console.log(chalk.green(`✅ Project root validated: ${absolutePath}`));
+      return absolutePath;
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(chalk.red(`❌ Project root validation failed: ${errorMessage}`));
+      
+      // Try to use a safe fallback
+      const safeFallback = process.cwd();
+      console.log(chalk.yellow(`🔄 Attempting safe fallback: ${safeFallback}`));
+      
+      try {
+        fs.accessSync(safeFallback, fs.constants.W_OK);
+        console.log(chalk.green(`✅ Safe fallback validated: ${safeFallback}`));
+        return path.resolve(safeFallback);
+      } catch (fallbackError) {
+        const fallbackErrorMessage = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+        throw new Error(`Cannot establish valid project root. Original: ${errorMessage}, Fallback: ${fallbackErrorMessage}`);
+      }
+    }
   }
 
   /**
    * Initializes the project by ensuring .ai-memory folder exists
+   * Enhanced with validation, error handling, and recovery mechanisms
    */
   private async initializeProject(): Promise<void> {
+    const memoryDir = path.join(this.projectRoot, '.ai-memory');
+    const projectMemoryPath = path.join(memoryDir, 'project-memory.json');
+    
+    console.log(chalk.blue(`🔧 Initializing project at: ${this.projectRoot}`));
+    
     try {
-      const memoryDir = path.join(this.projectRoot, '.ai-memory');
+      // Validate project root accessibility
+      await fs.access(this.projectRoot, fs.constants.R_OK | fs.constants.W_OK);
       
-      if (!await fs.pathExists(memoryDir)) {
-        await fs.ensureDir(memoryDir);
-        console.log(chalk.green(`✨ Initialized .ai-memory folder at: ${memoryDir}`));
-        
-        // Create initial project memory if it doesn't exist
-        const projectMemoryPath = path.join(memoryDir, 'project-memory.json');
-        if (!await fs.pathExists(projectMemoryPath)) {
-          const initialMemory = {
-            projectContext: {
-              name: path.basename(this.projectRoot),
-              architecture: 'unknown',
-              techStack: [],
-              codingStandards: './docs/coding-standards.md',
-              mainBranch: 'main'
-            },
-            currentSession: {
-              sessionId: this.generateSessionId(),
-              task: 'Project initialized',
-              started: new Date().toISOString(),
-              completedSteps: [],
-              nextSteps: [],
-              importantDecisions: {},
-              blockers: []
-            },
-            fileHistory: {},
-            globalDecisions: [],
-            approvalStates: {}
-          };
-          
-          await fs.writeJson(projectMemoryPath, initialMemory, { spaces: 2 });
-          console.log(chalk.green(`📝 Created initial project memory`));
+      // Check if memory directory exists and is accessible
+      if (await fs.pathExists(memoryDir)) {
+        try {
+          await fs.access(memoryDir, fs.constants.R_OK | fs.constants.W_OK);
+          console.log(chalk.green(`✅ Memory directory exists: ${memoryDir}`));
+        } catch (accessError) {
+          const accessErrorMessage = accessError instanceof Error ? accessError.message : String(accessError);
+          console.error(chalk.red(`❌ Cannot access memory directory: ${accessErrorMessage}`));
+          throw new Error(`Memory directory access denied: ${memoryDir}`);
         }
       } else {
-        console.log(chalk.blue(`📁 Using existing .ai-memory folder at: ${memoryDir}`));
+        // Create memory directory with proper error handling
+        try {
+          await fs.ensureDir(memoryDir);
+          console.log(chalk.green(`✨ Created .ai-memory folder at: ${memoryDir}`));
+          
+          // Verify the directory was created successfully
+          if (!await fs.pathExists(memoryDir)) {
+            throw new Error('Directory creation appeared to succeed but directory does not exist');
+          }
+        } catch (createError) {
+          const createErrorMessage = createError instanceof Error ? createError.message : String(createError);
+          console.error(chalk.red(`❌ Failed to create memory directory: ${createErrorMessage}`));
+          throw new Error(`Cannot create memory directory: ${createErrorMessage}`);
+        }
       }
       
-      console.log(chalk.green(`🚀 MCP Memory Server ready for project: ${path.basename(this.projectRoot)}`));
+      // Handle project memory file
+      if (await fs.pathExists(projectMemoryPath)) {
+        try {
+          // Validate existing project memory
+          const existingMemory = await fs.readJson(projectMemoryPath);
+          
+          // Check if the memory file has required structure
+          if (!existingMemory.projectContext || !existingMemory.currentSession) {
+            console.log(chalk.yellow(`⚠️  Project memory file is incomplete, backing up and recreating`));
+            
+            // Backup the existing file
+            const backupPath = path.join(memoryDir, `project-memory.backup.${Date.now()}.json`);
+            await fs.copy(projectMemoryPath, backupPath);
+            console.log(chalk.blue(`📋 Backed up existing memory to: ${backupPath}`));
+            
+            // Create new memory with any salvageable data
+            const newMemory = await this.createInitialMemory(existingMemory);
+            await this.writeProjectMemory(projectMemoryPath, newMemory);
+          } else {
+            console.log(chalk.green(`✅ Project memory file validated: ${projectMemoryPath}`));
+            
+            // Update project context if needed
+            const currentProjectName = path.basename(this.projectRoot);
+            if (existingMemory.projectContext.name !== currentProjectName) {
+              console.log(chalk.blue(`🔄 Updating project name: ${existingMemory.projectContext.name} → ${currentProjectName}`));
+              existingMemory.projectContext.name = currentProjectName;
+              existingMemory.projectContext.lastUpdated = new Date().toISOString();
+              await this.writeProjectMemory(projectMemoryPath, existingMemory);
+            }
+          }
+        } catch (readError) {
+          const readErrorMessage = readError instanceof Error ? readError.message : String(readError);
+          console.error(chalk.red(`❌ Failed to read project memory: ${readErrorMessage}`));
+          
+          // Backup corrupted file and create new one
+          const corruptedBackupPath = path.join(memoryDir, `project-memory.corrupted.${Date.now()}.json`);
+          try {
+            await fs.copy(projectMemoryPath, corruptedBackupPath);
+            console.log(chalk.yellow(`📋 Backed up corrupted memory to: ${corruptedBackupPath}`));
+          } catch (backupError) {
+            const errorMessage = backupError instanceof Error ? backupError.message : String(backupError);
+            console.log(chalk.yellow(`⚠️  Could not backup corrupted file: ${errorMessage}`));
+          }
+          
+          // Create fresh memory
+          const newMemory = await this.createInitialMemory();
+          await this.writeProjectMemory(projectMemoryPath, newMemory);
+        }
+      } else {
+        // Create initial project memory
+        console.log(chalk.blue(`📝 Creating initial project memory...`));
+        const initialMemory = await this.createInitialMemory();
+        await this.writeProjectMemory(projectMemoryPath, initialMemory);
+      }
+      
+      console.log(chalk.green(`🎉 Project initialization completed successfully`));
+      
     } catch (error) {
-      console.error(chalk.red('❌ Error initializing project:'), error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(chalk.red(`❌ Project initialization failed: ${errorMessage}`));
+      
+      // Attempt recovery
+      const errorObj = error instanceof Error ? error : new Error(String(error));
+      await this.attemptProjectRecovery(memoryDir, projectMemoryPath, errorObj);
+    }
+  }
+  
+  /**
+   * Creates initial memory structure with optional existing data
+   */
+  private async createInitialMemory(existingData?: any): Promise<any> {
+    const projectName = path.basename(this.projectRoot);
+    
+    // Detect project type and tech stack
+    const projectInfo = await this.detectProjectInfo();
+    
+    const initialMemory = {
+      projectContext: {
+        name: projectName,
+        architecture: projectInfo.architecture,
+        techStack: projectInfo.techStack,
+        codingStandards: './docs/coding-standards.md',
+        mainBranch: 'main',
+        created: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+        ...existingData?.projectContext
+      },
+      currentSession: {
+        sessionId: this.generateSessionId(),
+        task: 'Project initialized',
+        started: new Date().toISOString(),
+        completedSteps: [],
+        nextSteps: [],
+        importantDecisions: {},
+        blockers: [],
+        ...existingData?.currentSession
+      },
+      fileHistory: existingData?.fileHistory || {},
+      globalDecisions: existingData?.globalDecisions || [],
+      approvalStates: existingData?.approvalStates || {},
+      sessions: existingData?.sessions || []
+    };
+    
+    return initialMemory;
+  }
+  
+  /**
+   * Detects project information from available files
+   */
+  private async detectProjectInfo(): Promise<{ architecture: string; techStack: string[] }> {
+    const techStack: string[] = [];
+    let architecture = 'unknown';
+    
+    try {
+      // Check for package.json (Node.js/JavaScript/TypeScript)
+      const packageJsonPath = path.join(this.projectRoot, 'package.json');
+      if (await fs.pathExists(packageJsonPath)) {
+        const packageJson = await fs.readJson(packageJsonPath);
+        techStack.push('Node.js');
+        
+        if (packageJson.dependencies || packageJson.devDependencies) {
+          const allDeps = { ...packageJson.dependencies, ...packageJson.devDependencies };
+          
+          if (allDeps.typescript || allDeps['@types/node']) techStack.push('TypeScript');
+          if (allDeps.react) techStack.push('React');
+          if (allDeps.vue) techStack.push('Vue.js');
+          if (allDeps.angular) techStack.push('Angular');
+          if (allDeps.express) techStack.push('Express.js');
+          if (allDeps.next) techStack.push('Next.js');
+          if (allDeps.nuxt) techStack.push('Nuxt.js');
+        }
+        
+        architecture = 'web-application';
+      }
+      
+      // Check for Python files
+      if (await fs.pathExists(path.join(this.projectRoot, 'requirements.txt')) ||
+          await fs.pathExists(path.join(this.projectRoot, 'pyproject.toml')) ||
+          await fs.pathExists(path.join(this.projectRoot, 'Pipfile'))) {
+        techStack.push('Python');
+        architecture = 'python-application';
+      }
+      
+      // Check for other languages
+      if (await fs.pathExists(path.join(this.projectRoot, 'Cargo.toml'))) {
+        techStack.push('Rust');
+        architecture = 'rust-application';
+      }
+      
+      if (await fs.pathExists(path.join(this.projectRoot, 'go.mod'))) {
+        techStack.push('Go');
+        architecture = 'go-application';
+      }
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.log(chalk.gray(`   Could not detect project info: ${errorMessage}`));
+    }
+    
+    return { architecture, techStack };
+  }
+  
+  /**
+   * Safely writes project memory with validation
+   */
+  private async writeProjectMemory(filePath: string, memory: any): Promise<void> {
+    try {
+      // Validate memory structure
+      if (!memory.projectContext || !memory.currentSession) {
+        throw new Error('Invalid memory structure: missing required sections');
+      }
+      
+      // Write to temporary file first
+      const tempPath = filePath + '.tmp';
+      await fs.writeJson(tempPath, memory, { spaces: 2 });
+      
+      // Verify the written file
+      const written = await fs.readJson(tempPath);
+      if (!written.projectContext) {
+        throw new Error('Written file validation failed');
+      }
+      
+      // Move temp file to final location
+      await fs.move(tempPath, filePath, { overwrite: true });
+      console.log(chalk.green(`📝 Project memory saved successfully`));
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(chalk.red(`❌ Failed to write project memory: ${errorMessage}`));
+      
+      // Clean up temp file if it exists
+      const tempPath = filePath + '.tmp';
+      if (await fs.pathExists(tempPath)) {
+        await fs.remove(tempPath);
+      }
+      
+      throw error;
+    }
+  }
+  
+  /**
+   * Attempts to recover from project initialization failures
+   */
+  private async attemptProjectRecovery(memoryDir: string, projectMemoryPath: string, originalError: Error): Promise<void> {
+    console.log(chalk.yellow(`🔄 Attempting project recovery...`));
+    
+    try {
+      // Try to create a minimal working setup
+      const minimalMemory = {
+        projectContext: {
+          name: path.basename(this.projectRoot),
+          architecture: 'unknown',
+          techStack: [],
+          created: new Date().toISOString()
+        },
+        currentSession: {
+          sessionId: this.generateSessionId(),
+          task: 'Recovery initialization',
+          started: new Date().toISOString(),
+          completedSteps: [],
+          nextSteps: [],
+          importantDecisions: {},
+          blockers: []
+        },
+        fileHistory: {},
+        globalDecisions: [],
+        approvalStates: {},
+        sessions: []
+      };
+      
+      // Ensure directory exists
+      await fs.ensureDir(memoryDir);
+      
+      // Write minimal memory
+      await fs.writeJson(projectMemoryPath, minimalMemory, { spaces: 2 });
+      
+      console.log(chalk.green(`✅ Recovery successful: minimal project setup created`));
+      console.log(chalk.yellow(`⚠️  Original error: ${originalError.message}`));
+      
+    } catch (recoveryError) {
+      const recoveryErrorMessage = recoveryError instanceof Error ? recoveryError.message : String(recoveryError);
+      console.error(chalk.red(`❌ Recovery failed: ${recoveryErrorMessage}`));
+      throw new Error(`Project initialization failed and recovery unsuccessful. Original: ${originalError.message}, Recovery: ${recoveryErrorMessage}`);
     }
   }
 
