@@ -3,7 +3,7 @@
  * @class: RuleEngine
  * @description: File modification rules engine that enforces AI safety protocols, permission checks, and approval workflows for secure AI assistant operations
  * @last-update: 2024-12-20
- * @last-editor: ai-assistant
+ * @last-editor: Mohammad Mehdi Shaban Keleshteri
  * @changelog: ./CHANGELOG.md
  * @stability: stable
  * @edit-permissions: method-specific

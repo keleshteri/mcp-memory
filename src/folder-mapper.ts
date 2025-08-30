@@ -3,7 +3,7 @@
  * @component: FolderMapper
  * @description: Automatically generates and maintains _map.md files for each folder, providing quick overviews of classes, methods, and interfaces
  * @last-update: 2024-01-15
- * @last-editor: ai-assistant
+ * @last-editor: Mohammad Mehdi Shaban Keleshteri
  * @changelog: ./CHANGELOG.md
  * @stability: experimental
  * @edit-permissions: full

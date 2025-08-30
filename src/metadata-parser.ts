@@ -3,7 +3,7 @@
  * @class: MetadataParser
  * @description: Parses and validates AI metadata headers from source files, extracting structured metadata for the rule engine and approval system
  * @last-update: 2024-12-20
- * @last-editor: ai-assistant
+ * @last-editor: Mohammad Mehdi Shaban Keleshteri
  * @changelog: ./CHANGELOG.md
  * @stability: stable
  * @edit-permissions: method-specific

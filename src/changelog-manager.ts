@@ -3,7 +3,7 @@
  * @class: ChangelogManager
  * @description: Manages automatic changelog generation and tracking for AI coding sessions, handling both JSON and Markdown changelog formats
  * @last-update: 2024-12-20
- * @last-editor: ai-assistant
+ * @last-editor: Mohammad Mehdi Shaban Keleshteri
  * @changelog: ./CHANGELOG.md
  * @stability: stable
  * @edit-permissions: method-specific

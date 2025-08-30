@@ -2,16 +2,16 @@
  * @ai-metadata
  * @class: MCPMemoryServer
  * @description: Main MCP server implementation that provides AI coding assistants with memory management, file approval tracking, and changelog functionality
- * @last-update: 2024-12-20
- * @last-editor: ai-assistant
+ * @last-update: 2025-08-24T09:47:46.381Z
+ * @last-editor: Mohammad Mehdi Shaban Keleshteri
  * @changelog: ./CHANGELOG.md
  * @stability: stable
  * @edit-permissions: method-specific
  * @method-permissions: { "constructor": "read-only", "detectProjectRoot": "read-only", "initializeProject": "add-only", "setupHandlers": "read-only", "run": "read-only" }
  * @dependencies: ["@modelcontextprotocol/sdk", "./memory-manager.js", "./changelog-manager.js", "./metadata-parser.js", "./rule-engine.js", "chalk", "fs-extra", "path"]
  * @tests: ["./tests/index.test.js"]
- * @breaking-changes-risk: high
- * @review-required: true
+ * @breaking-changes-risk: low
+ * @review-required: false
  * @ai-context: "This is the core MCP server implementation. Changes here affect all MCP protocol interactions and tool availability. Handle with extreme care."
  *
  * @approvals:
@@ -44,6 +44,7 @@ import { ChangelogManager } from './changelog-manager.js';
 import { MetadataParser } from './metadata-parser.js';
 import { RuleEngine } from './rule-engine.js';
 import { FolderMapper } from './folder-mapper.js';
+import { GitUtils } from './git-utils.js';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
@@ -55,6 +56,7 @@ class MCPMemoryServer {
   private metadataParser: MetadataParser;
   private ruleEngine: RuleEngine;
   private folderMapper: FolderMapper;
+  private gitUtils: GitUtils;
   private projectRoot: string;
 
   constructor() {
@@ -74,6 +76,7 @@ class MCPMemoryServer {
     this.metadataParser = new MetadataParser(this.projectRoot);
     this.ruleEngine = new RuleEngine();
     this.folderMapper = new FolderMapper(this.projectRoot);
+    this.gitUtils = new GitUtils(this.projectRoot);
 
     this.setupHandlers();
     this.initializeProject();
@@ -737,6 +740,38 @@ class MCPMemoryServer {
             type: 'object',
             properties: {}
           }
+        },
+
+        // Git Tools
+        {
+          name: 'update_last_editor',
+          description: 'Update @last-editor field in a file with Git author information',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              filePath: { type: 'string', description: 'Path to the file to update' }
+            },
+            required: ['filePath']
+          }
+        },
+        {
+          name: 'update_all_last_editors',
+          description: 'Update @last-editor fields in all files with Git author information',
+          inputSchema: {
+            type: 'object',
+            properties: {}
+          }
+        },
+        {
+          name: 'get_file_last_editor',
+          description: 'Get the last editor of a file from Git history',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              filePath: { type: 'string', description: 'Path to the file' }
+            },
+            required: ['filePath']
+          }
         }
       ]
     }));
@@ -873,6 +908,37 @@ class MCPMemoryServer {
           case 'generate_all_folder_maps': {
             await this.folderMapper.generateAllFolderMaps();
             return { content: [{ type: 'text', text: 'All folder maps generated successfully' }] };
+          }
+
+          // Git Tools
+          case 'update_last_editor': {
+            const filePath = args.filePath as string;
+            const result = await this.gitUtils.updateLastEditorInFile(filePath);
+            if (result.success) {
+              return { content: [{ type: 'text', text: `Last editor updated successfully for: ${filePath}. New editor: ${result.newEditor}` }] };
+            } else {
+              return { content: [{ type: 'text', text: `Failed to update last editor for: ${filePath}. Reason: ${result.reason}` }] };
+            }
+          }
+
+          case 'update_all_last_editors': {
+            const results = await this.gitUtils.updateAllLastEditors();
+            const summary = {
+              updated: results.filter(r => r.success).length,
+              skipped: results.filter(r => !r.success).length,
+              details: results
+            };
+            return { content: [{ type: 'text', text: `Updated ${summary.updated} files, skipped ${summary.skipped} files. Details: ${JSON.stringify(summary.details, null, 2)}` }] };
+          }
+
+          case 'get_file_last_editor': {
+            const filePath = args.filePath as string;
+            const lastEditor = await this.gitUtils.getFileLastEditor(filePath);
+            if (lastEditor) {
+              return { content: [{ type: 'text', text: `Last editor of ${filePath}: ${lastEditor}` }] };
+            } else {
+              return { content: [{ type: 'text', text: `Could not determine last editor for: ${filePath}` }] };
+            }
           }
 
           default:

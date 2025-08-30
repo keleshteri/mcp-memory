@@ -3,7 +3,7 @@
  * @class: TypeDefinitions
  * @description: Core TypeScript interfaces and type definitions for AI metadata, project memory, approvals, and system components
  * @last-update: 2024-12-20
- * @last-editor: ai-assistant
+ * @last-editor: Mohammad Mehdi Shaban Keleshteri
  * @changelog: ./CHANGELOG.md
  * @stability: stable
  * @edit-permissions: add-only

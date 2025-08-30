@@ -3,7 +3,7 @@
  * @class: MemoryManager
  * @description: Core memory and session management system for AI coding assistants, handling project memory, file approvals, and session tracking
  * @last-update: 2024-12-20
- * @last-editor: ai-assistant
+ * @last-editor: Mohammad Mehdi Shaban Keleshteri
  * @changelog: ./CHANGELOG.md
  * @stability: stable
  * @edit-permissions: method-specific
